@@ -97,7 +97,9 @@ services:
 #   meilisearch:
 #     ports:
 #       - 7700:7700
-
+   meilisearch:
+     volumes:
+       - ./meili_data_v1.7:/var/lib/meili_data
 # # USE RAG API IMAGE WITH LOCAL EMBEDDINGS SUPPORT
 #  rag_api:
 #    image: ghcr.io/danny-avila/librechat-rag-api-dev:latest
@@ -142,7 +144,7 @@ services:
 #      REDIS_PASSWORD: RedisChangeMe
 #    volumes:
 #    - ./redis:/data
-  
+
 # # ADD LITELLM MONITORING
 #  langfuse-server:
 #    image: ghcr.io/langfuse/langfuse:latest
