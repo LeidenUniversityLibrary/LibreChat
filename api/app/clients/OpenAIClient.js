@@ -27,7 +27,6 @@ const {
   createContextHandlers,
 } = require('./prompts');
 const { encodeAndFormat } = require('~/server/services/Files/images/encode');
-const { updateTokenWebsocket } = require('~/server/services/Files/Audio');
 const { isEnabled, sleep } = require('~/server/utils');
 const { handleOpenAIErrors } = require('./tools/util');
 const spendTokens = require('~/models/spendTokens');
@@ -589,13 +588,12 @@ class OpenAIClient extends BaseClient {
     let streamResult = null;
     this.modelOptions.user = this.user;
     const invalidBaseUrl = this.completionsUrl && extractBaseURL(this.completionsUrl) === null;
-    const useOldMethod = !!(invalidBaseUrl || !this.isChatCompletion || typeof Bun !== 'undefined');
+    const useOldMethod = !!(invalidBaseUrl || !this.isChatCompletion);
     if (typeof opts.onProgress === 'function' && useOldMethod) {
       const completionResult = await this.getCompletion(
         payload,
         (progressMessage) => {
           if (progressMessage === '[DONE]') {
-            updateTokenWebsocket('[DONE]');
             return;
           }
 
@@ -829,7 +827,7 @@ class OpenAIClient extends BaseClient {
 
       const instructionsPayload = [
         {
-          role: 'system',
+          role: this.options.titleMessageRole ?? 'system',
           content: `Please generate ${titleInstruction}
 
 ${convo}
@@ -1134,6 +1132,7 @@ ${convo}
       let chatCompletion;
       /** @type {OpenAI} */
       const openai = new OpenAI({
+        fetch: this.fetch,
         apiKey: this.apiKey,
         ...opts,
       });
@@ -1183,8 +1182,10 @@ ${convo}
         });
       }
 
+      const streamRate = this.options.streamRate ?? Constants.DEFAULT_STREAM_RATE;
+
       if (this.message_file_map && this.isOllama) {
-        const ollamaClient = new OllamaClient({ baseURL });
+        const ollamaClient = new OllamaClient({ baseURL, streamRate });
         return await ollamaClient.chatCompletion({
           payload: modelOptions,
           onProgress,
@@ -1222,8 +1223,6 @@ ${convo}
             }
           });
 
-        const azureDelay = this.modelOptions.model?.includes('gpt-4') ? 30 : 17;
-
         for await (const chunk of stream) {
           const token = chunk.choices[0]?.delta?.content || '';
           intermediateReply += token;
@@ -1233,9 +1232,7 @@ ${convo}
             break;
           }
 
-          if (this.azure) {
-            await sleep(azureDelay);
-          }
+          await sleep(streamRate);
         }
 
         if (!UnexpectedRoleError) {

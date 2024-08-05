@@ -1,8 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { isAssistantsEndpoint } from 'librechat-data-provider';
+import { Constants, isAssistantsEndpoint } from 'librechat-data-provider';
 import type { TMessageProps } from '~/common';
 import { useChatContext, useAssistantsMapContext } from '~/Providers';
 import useCopyToClipboard from './useCopyToClipboard';
+import { getTextKey, logger } from '~/utils';
 
 export default function useMessageHelpers(props: TMessageProps) {
   const latestText = useRef<string | number>('');
@@ -26,19 +27,35 @@ export default function useMessageHelpers(props: TMessageProps) {
   const isLast = !children?.length;
 
   useEffect(() => {
-    let contentChanged = message?.content
-      ? message?.content?.length !== latestText.current
-      : message?.text !== latestText.current;
-
-    if (!isLast) {
-      contentChanged = false;
+    const convoId = conversation?.conversationId;
+    if (convoId === Constants.NEW_CONVO) {
+      return;
     }
-
     if (!message) {
       return;
-    } else if (isLast && conversation?.conversationId !== 'new' && contentChanged) {
+    }
+    if (!isLast) {
+      return;
+    }
+
+    const textKey = getTextKey(message, convoId);
+
+    // Check for text/conversation change
+    const logInfo = {
+      textKey,
+      'latestText.current': latestText.current,
+      messageId: message?.messageId,
+      convoId,
+    };
+    if (
+      textKey !== latestText.current ||
+      (latestText.current && convoId !== latestText.current.split(Constants.COMMON_DIVIDER)[2])
+    ) {
+      logger.log('[useMessageHelpers] Setting latest message: ', logInfo);
+      latestText.current = textKey;
       setLatestMessage({ ...message });
-      latestText.current = message?.content ? message.content.length : message.text;
+    } else {
+      logger.log('No change in latest message', logInfo);
     }
   }, [isLast, message, setLatestMessage, conversation?.conversationId]);
 

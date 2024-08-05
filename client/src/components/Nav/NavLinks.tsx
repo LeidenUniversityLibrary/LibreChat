@@ -1,10 +1,8 @@
-import { useLocation } from 'react-router-dom';
-import { Fragment, useState, memo } from 'react';
 import { FileText } from 'lucide-react';
-import { Menu, Transition } from '@headlessui/react';
-import { useRecoilValue, useRecoilState } from 'recoil';
+import { useRecoilState } from 'recoil';
+import { Fragment, useState, memo } from 'react';
+import { Menu, MenuItem, MenuButton, MenuItems, Transition } from '@headlessui/react';
 import { useGetUserBalance, useGetStartupConfig } from 'librechat-data-provider/react-query';
-import type { TConversation } from 'librechat-data-provider';
 import FilesView from '~/components/Chat/Input/Files/FilesView';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useAvatar from '~/hooks/Messages/useAvatar';
@@ -19,7 +17,6 @@ import store from '~/store';
 
 function NavLinks() {
   const localize = useLocalize();
-  const location = useLocation();
   const { user, isAuthenticated } = useAuthContext();
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
@@ -28,24 +25,14 @@ function NavLinks() {
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useRecoilState(store.showFiles);
 
-  const activeConvo = useRecoilValue(store.conversationByIndex(0));
-  const globalConvo = useRecoilValue(store.conversation) ?? ({} as TConversation);
-
   const avatarSrc = useAvatar(user);
-
-  let conversation: TConversation | null | undefined;
-  if (location.state?.from?.pathname.includes('/chat')) {
-    conversation = globalConvo;
-  } else {
-    conversation = activeConvo;
-  }
 
   return (
     <>
       <Menu as="div" className="group relative">
         {({ open }) => (
           <>
-            <Menu.Button
+            <MenuButton
               className={cn(
                 'group-ui-open:bg-gray-100 dark:group-ui-open:bg-gray-700 duration-350 mt-text-sm flex h-auto w-full items-center gap-2 rounded-lg p-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800',
                 open ? 'bg-gray-100 dark:bg-gray-800' : '',
@@ -77,7 +64,7 @@ function NavLinks() {
               >
                 {user?.name || user?.username || localize('com_nav_user')}
               </div>
-            </Menu.Button>
+            </MenuButton>
 
             <Transition
               as={Fragment}
@@ -88,7 +75,7 @@ function NavLinks() {
               leaveFrom="translate-y-0 opacity-100"
               leaveTo="translate-y-2 opacity-0"
             >
-              <Menu.Items className="absolute bottom-full left-0 z-[100] mb-1 mt-1 w-full translate-y-0 overflow-hidden rounded-lg border border-gray-300 bg-white p-1.5 opacity-100 shadow-lg outline-none dark:border-gray-600 dark:bg-gray-700">
+              <MenuItems className="absolute bottom-full left-0 z-[100] mb-1 mt-1 w-full translate-y-0 overflow-hidden rounded-lg border border-gray-300 bg-white p-1.5 opacity-100 shadow-lg outline-none dark:border-gray-600 dark:bg-gray-700">
                 <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="none">
                   {user?.email || localize('com_nav_user')}
                 </div>
@@ -103,34 +90,34 @@ function NavLinks() {
                     <div className="my-1.5 h-px bg-black/10 dark:bg-white/10" role="none" />
                   </>
                 )}
-                <Menu.Item as="div">
+                <MenuItem as="div">
                   <NavLink
                     svg={() => <FileText className="icon-md" />}
                     text={localize('com_nav_my_files')}
                     clickHandler={() => setShowFiles(true)}
                   />
-                </Menu.Item>
+                </MenuItem>
                 {startupConfig?.helpAndFaqURL !== '/' && (
-                  <Menu.Item as="div">
+                  <MenuItem as="div">
                     <NavLink
                       svg={() => <LinkIcon />}
                       text={localize('com_nav_help_faq')}
                       clickHandler={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
                     />
-                  </Menu.Item>
+                  </MenuItem>
                 )}
-                <Menu.Item as="div">
+                <MenuItem as="div">
                   <NavLink
                     svg={() => <GearIcon className="icon-md" />}
                     text={localize('com_nav_settings')}
                     clickHandler={() => setShowSettings(true)}
                   />
-                </Menu.Item>
+                </MenuItem>
                 <div className="my-1.5 h-px bg-black/10 dark:bg-white/10" role="none" />
-                <Menu.Item as="div">
+                <MenuItem as="div">
                   <Logout />
-                </Menu.Item>
-              </Menu.Items>
+                </MenuItem>
+              </MenuItems>
             </Transition>
           </>
         )}
