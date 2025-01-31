@@ -105,16 +105,16 @@ services:
 #    image: ghcr.io/danny-avila/librechat-rag-api-dev:latest
 
 # ADD OLLAMA
-   ollama:
-     image: ollama/ollama:latest
-     ports:
-       - "11434:11434"
-     volumes:
-       - ./ollama:/root/.ollama
-       - ./wait_for_ollama.sh:/wait_for_ollama.sh
-     tty: true
-     restart: always
-     entrypoint: [ "/usr/bin/bash", "/wait_for_ollama.sh" ]
+#   ollama:
+#     image: ollama/ollama:latest
+#     ports:
+#       - "11434:11434"
+#     volumes:
+#       - ./ollama:/root/.ollama
+#       - ./wait_for_ollama.sh:/wait_for_ollama.sh
+#     tty: true
+#     restart: always
+#     entrypoint: [ "/usr/bin/bash", "/wait_for_ollama.sh" ]
 # # ADD LITELLM BASIC - NEED TO CONFIGURE litellm-config.yaml, ONLY NEED ENV TO ENABLE REDIS FOR CACHING OR LANGFUSE FOR MONITORING
 #  litellm:
 #    image: ghcr.io/berriai/litellm:main-latest
