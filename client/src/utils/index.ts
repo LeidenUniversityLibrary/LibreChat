@@ -22,6 +22,7 @@ export { default as getLoginError } from './getLoginError';
 export { default as cleanupPreset } from './cleanupPreset';
 export { default as buildDefaultConvo } from './buildDefaultConvo';
 export { default as getDefaultEndpoint } from './getDefaultEndpoint';
+export { default as createChatSearchParams } from './createChatSearchParams';
 
 export const languages = [
   'java',
@@ -97,4 +98,22 @@ export const extractContent = (
     return children.map(extractContent).join('');
   }
   return '';
+};
+
+export const normalizeLayout = (layout: number[]) => {
+  const sum = layout.reduce((acc, size) => acc + size, 0);
+  if (Math.abs(sum - 100) < 0.01) {
+    return layout.map((size) => Number(size.toFixed(2)));
+  }
+
+  const factor = 100 / sum;
+  const normalizedLayout = layout.map((size) => Number((size * factor).toFixed(2)));
+
+  const adjustedSum = normalizedLayout.reduce(
+    (acc, size, index) => (index === layout.length - 1 ? acc : acc + size),
+    0,
+  );
+  normalizedLayout[normalizedLayout.length - 1] = Number((100 - adjustedSum).toFixed(2));
+
+  return normalizedLayout;
 };
